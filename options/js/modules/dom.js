@@ -95,9 +95,10 @@ const addDomain = (text = "", tocreate = undefined, isImport = false) => {
         document.querySelector("#sitesList").insertAdjacentHTML("beforeend", html);
         trackChanges(isImport);
         //Click events
-        document.querySelector(".addSite_" + countDomains).addEventListener("click", addSite.bind("", "domain_" + countDomains, "", "", "", true, false, false));
+        const urlParams = new URLSearchParams(window.location.search);
+        document.querySelector(".addSite_" + countDomains).addEventListener("click", addSite.bind("", "domain_" + countDomains, "", urlParams.get('siteUrl'), "", true, false, false));
         document.querySelector(".editDomain_" + countDomains).addEventListener("click", editDomain.bind("", "domain_" + countDomains));
-        tocreate === undefined ? addSite("domain_" + countDomains, "", "", true) : false;
+        tocreate === undefined ? addSite("domain_" + countDomains, "", urlParams.get('siteUrl')) : false;
         returnId = `domain_` + countDomains;
       }
     } catch (error) {
@@ -171,7 +172,7 @@ const addSite = (domain, path, cd, lang = "", embedding = true, displayName = fa
         <div class="arrow">➝</div>
         <div class="cd_url">
             <label for="siteUrl">Site URL</label>
-            <input id="siteUrl" name="value" type="url" placeholder="e.g https://..." pattern="https?://.*" value="${decodeURI(cd)}"> 
+            <input id="siteUrl" name="value" type="url" placeholder="e.g https://..." pattern="https?://.*" value="${cd ? decodeURI(cd) : ''}"> 
         </div>
         <div class="lang_url" style="${showAdvanced}" title="Whether or not you want to bind this URL to a specific language version. (if empty, applies to all languages)">
             <label for="langUrl">Language</label>

@@ -155,6 +155,7 @@ const saveSettings = () => {
     feature_workbox: document.querySelector("#feature_workbox").checked,
     feature_urlstatus: document.querySelector("#feature_urlstatus").checked,
     feature_contextmenu: document.querySelector("#feature_contextmenu").checked,
+    feature_editcommands: document.querySelector("#feature_editcommands").checked,
     feature_gravatarimage: document.querySelector("#feature_gravatarimage").checked,
     feature_lockeditems: document.querySelector("#feature_lockeditems").checked,
     feature_helplink: document.querySelector("#feature_helplink").checked,

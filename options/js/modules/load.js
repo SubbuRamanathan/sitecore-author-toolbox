@@ -35,6 +35,7 @@ const getFeatures = () => {
     toggleFeature(storage.feature_messagebar, "#feature_messagebar", false);
     toggleFeature(storage.feature_workbox, "#feature_workbox", true);
     toggleFeature(storage.feature_contextmenu, "#feature_contextmenu", true);
+    toggleFeature(storage.feature_editcommands, "#feature_editcommands", true);
     toggleFeature(storage.feature_gravatarimage, "#feature_gravatarimage", true);
     toggleFeature(storage.feature_lockeditems, "#feature_lockeditems", true);
     toggleFeature(storage.feature_helplink, "#feature_helplink", true);
