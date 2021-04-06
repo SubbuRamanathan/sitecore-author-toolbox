@@ -35,9 +35,33 @@ const showContextMenu = (tab) => {
                 );
                 chrome.contextMenus.create(
                     {
-                        title: "🗔  View in Preview",
+                        title: "🚀 Edit in Horizon",
                         contexts: ["page"],
-                        id: "viewInPreview",
+                        id: "editInHorizon",
+                    },
+                    () => chrome.runtime.lastError
+                );
+                chrome.contextMenus.create(
+                    {
+                        title: "🏁 View Page Insights",
+                        contexts: ["page"],
+                        id: "viewPageInsights",
+                    },
+                    () => chrome.runtime.lastError
+                );
+                chrome.contextMenus.create(
+                    {
+                        title: "🖥️ Preview in Simulator",
+                        contexts: ["page"],
+                        id: "previewInSimulator",
+                    },
+                    () => chrome.runtime.lastError
+                );
+                chrome.contextMenus.create(
+                    {
+                        title: "🗔  Open in Preview Mode",
+                        contexts: ["page"],
+                        id: "openInPreview",
                     },
                     () => chrome.runtime.lastError
                 );
@@ -64,14 +88,40 @@ const launchEditUrl = (action, tabInfo) => {
                         var experienceEditorUrl = getEditUrl(cmUrl, cdUrl.pathname);
                         openInNewTab(experienceEditorUrl);
                         break;
-                    case "viewInPreview":
-                        var previewUrl = getPreviewUrl(cmUrl, cdUrl.pathname);
-                        openInNewTab(previewUrl);
-                        break;
                     case "editInContentEditor":
                         var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
-                        var contentEditorUrl = `${cmUrl}/sitecore/shell/Applications/Content%20Editor.aspx?sc_bw=1&fo={${associatedItem.id}}&la=${associatedItem.language}`;
-                        openInNewTab(contentEditorUrl);
+                        if(associatedItem){
+                            var contentEditorUrl = `${cmUrl}/sitecore/shell/Applications/Content%20Editor.aspx?sc_bw=1&fo={${associatedItem.id}}&la=${associatedItem.language}`;
+                            openInNewTab(contentEditorUrl);
+                        }
+                        break;
+                    case "editInHorizon":
+                        var horizonAppUrl = await getHorizonAppUrl(cmUrl);
+                        if(horizonAppUrl) {
+                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                            var horizonEditorUrl = `${horizonAppUrl}/editor?sc_itemid=${associatedItem.id}&sc_lang=${associatedItem.language}&sc_site=${associatedItem.site}`;
+                            openInNewTab(horizonEditorUrl);
+                        }
+                        break;
+                    case "viewPageInsights":
+                        var horizonAppUrl = await getHorizonAppUrl(cmUrl);
+                        if(horizonAppUrl) {
+                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                            var pageInsightsUrl = `${horizonAppUrl}/insights?sc_itemid=${associatedItem.id}&sc_lang=${associatedItem.language}&sc_site=${associatedItem.site}`;
+                            openInNewTab(pageInsightsUrl);
+                        }
+                        break;
+                    case "previewInSimulator":
+                        var horizonAppUrl = await getHorizonAppUrl(cmUrl);
+                        if(horizonAppUrl) {
+                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                            var simulatorUrl = `${new URL(horizonAppUrl).origin}/composer/simulator?sc_itemid=${associatedItem.id}&sc_lang=${associatedItem.language}&sc_site=${associatedItem.site}`;
+                            openInNewTab(simulatorUrl);
+                        }
+                        break;
+                    case "openInPreview":
+                        var previewUrl = getPreviewUrl(cmUrl, cdUrl.pathname);
+                        openInNewTab(previewUrl);
                         break;
                 }
             }
@@ -97,15 +147,39 @@ const getCMUrl = (sitesInfo, cdUrl) => {
 
 const getAssociatedItemInfo = async (cmOrigin, path) => {
     var previewUrl = getPreviewUrl(cmOrigin, path);
-    const response = await fetch(previewUrl);
-    const responseText = await response.text(); 
-    var parser = new DOMParser();
-    var htmlDocument = parser.parseFromString(responseText, 'text/html');
-    var itemInfo = {
-        id: parseGuid(htmlDocument.getElementById("scItemID")?.value),
-        language: htmlDocument.getElementById("scLanguage")?.value  
+    var htmlDocument = await fetchHTML(previewUrl);
+    if(htmlDocument){
+        var itemInfo = {
+            id: parseGuid(htmlDocument.getElementById("scItemID")?.value),
+            language: htmlDocument.getElementById("scLanguage")?.value,
+            site: htmlDocument.getElementById("scSite")?.value
+        }
+        return itemInfo
     }
-    return itemInfo
+}
+
+const getHorizonAppUrl = async (cmOrigin) => {
+    const launchPadUrl = `${cmOrigin}/sitecore/shell/sitecore/client/Applications/Launchpad`;
+    var htmlDocument = await fetchHTML(launchPadUrl);
+    if(htmlDocument){
+        var horizonTile = htmlDocument.querySelectorAll('a[title="Horizon"]');
+        if(horizonTile.length > 0)
+            return horizonTile[0].href;
+        else
+            alert('Horizon not configured for this domain');
+    }
+}
+
+const fetchHTML = async (url) => {
+    const response = await fetch(url, { redirect: 'manual'});
+    if(response.status == 200){
+        const responseText = await response.text(); 
+        var parser = new DOMParser();
+        return parser.parseFromString(responseText, 'text/html');
+    }
+    else{
+        openInNewTab(`${new URL(url).origin}/sitecore/login`);
+    }
 }
 
 const getPreviewUrl = (cmOrigin, path) => {

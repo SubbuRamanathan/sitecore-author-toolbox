@@ -39,17 +39,23 @@
       },
       "description": "Edit In Experience Editor"
     },
-    "viewInPreview": {
-      "suggested_key": {
-        "default": "Alt+P"
-      },
-      "description": "View In Preview"
-    },
     "editInContentEditor": {
       "suggested_key": {
         "default": "Alt+C"
       },
       "description": "Edit In Content Editor"
+    },
+    "editInHorizon": {
+      "suggested_key": {
+        "default": "Alt+H"
+      },
+      "description": "Edit in Horizon"
+    },
+    "viewPageInsights": {
+      "suggested_key": {
+        "default": "Alt+I"
+      },
+      "description": "View Page Insights"
     }
   }
 }
