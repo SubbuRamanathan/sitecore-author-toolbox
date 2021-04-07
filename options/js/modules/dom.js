@@ -143,7 +143,7 @@ const editDomain = (domainId) => {
 /**
  * Prepend input fields to add a site
  */
-const addSite = (domain, path, cd, lang = "", embedding = true, displayName = false, autoadd = false, name = "", isImport = "") => {
+const addSite = (domain, path, cd, lang = "", embedding = true, displayName = false, autoadd = false, name = "", isImport = "", siteName = "") => {
   let isExisting = false;
 
   //Check if sites already exists
@@ -177,6 +177,10 @@ const addSite = (domain, path, cd, lang = "", embedding = true, displayName = fa
         <div class="lang_url" style="${showAdvanced}" title="Whether or not you want to bind this URL to a specific language version. (if empty, applies to all languages)">
             <label for="langUrl">Language</label>
             <input id="langUrl" name="lang" type="url" placeholder="e.g fr-FR" value="${decodeURI(lang)}"> 
+        </div>
+        <div class="lang_url" style="${showAdvanced}" title="Please specify the exact site name configured in site config. (Only needed for multi-site implementations if the auto-siteresolving doesn't identify correct site for edit urls)">
+            <label for="siteName">Site Name</label>
+            <input id="siteName" name="siteName" type="text" placeholder="e.g website" value="${siteName}"> 
         </div>
         <div class="embedding_url" style="${showAdvanced}" title="Whether or not you want to add language code in the URL">
             <label for="langUrl">Embedding</label>

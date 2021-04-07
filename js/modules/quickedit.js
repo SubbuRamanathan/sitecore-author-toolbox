@@ -86,15 +86,16 @@ const launchEditUrl = (action, tabInfo) => {
     if (tabInfo) {
         chrome.storage.sync.get(["site_manager"], async (storage) => {
             var cdUrl = new URL(tabInfo.url);
-            var cmUrl = getCMUrl(storage.site_manager, cdUrl.origin);
+            var siteInfo = getSiteInfo(storage.site_manager, cdUrl.origin);
+            var cmUrl = siteInfo.cmUrl;
             if (cmUrl) {
                 switch (action) {
                     case "editInExperienceEditor":
-                        var experienceEditorUrl = getEditUrl(cmUrl, cdUrl.pathname);
+                        var experienceEditorUrl = getEditUrl(cmUrl, cdUrl.pathname, siteInfo.siteName);
                         openInNewTab(experienceEditorUrl);
                         break;
                     case "editInContentEditor":
-                        var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                        var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname, siteInfo.siteName);
                         if(associatedItem){
                             var contentEditorUrl = `${cmUrl}/sitecore/shell/Applications/Content%20Editor.aspx?sc_bw=1&fo={${associatedItem.id}}&la=${associatedItem.language}`;
                             openInNewTab(contentEditorUrl);
@@ -103,7 +104,7 @@ const launchEditUrl = (action, tabInfo) => {
                     case "editInHorizon":
                         var horizonAppUrl = await getHorizonAppUrl(cmUrl);
                         if(horizonAppUrl) {
-                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname, siteInfo.siteName);
                             var horizonEditorUrl = `${horizonAppUrl}/editor?sc_itemid=${associatedItem.id}&sc_lang=${associatedItem.language}&sc_site=${associatedItem.site}`;
                             openInNewTab(horizonEditorUrl);
                         }
@@ -111,7 +112,7 @@ const launchEditUrl = (action, tabInfo) => {
                     case "viewPageInsights":
                         var horizonAppUrl = await getHorizonAppUrl(cmUrl);
                         if(horizonAppUrl) {
-                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname, siteInfo.siteName);
                             var pageInsightsUrl = `${horizonAppUrl}/insights?sc_itemid=${associatedItem.id}&sc_lang=${associatedItem.language}&sc_site=${associatedItem.site}`;
                             openInNewTab(pageInsightsUrl);
                         }
@@ -119,13 +120,13 @@ const launchEditUrl = (action, tabInfo) => {
                     case "previewInSimulator":
                         var horizonAppUrl = await getHorizonAppUrl(cmUrl);
                         if(horizonAppUrl) {
-                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname);
+                            var associatedItem = await getAssociatedItemInfo(cmUrl, cdUrl.pathname, siteInfo.siteName);
                             var simulatorUrl = `${new URL(horizonAppUrl).origin}/composer/simulator?sc_itemid=${associatedItem.id}&sc_lang=${associatedItem.language}&sc_site=${associatedItem.site}`;
                             openInNewTab(simulatorUrl);
                         }
                         break;
                     case "openInPreview":
-                        var previewUrl = getPreviewUrl(cmUrl, cdUrl.pathname);
+                        var previewUrl = getPreviewUrl(cmUrl, cdUrl.pathname, siteInfo.siteName);
                         openInNewTab(previewUrl);
                         break;
                 }
@@ -140,26 +141,25 @@ const launchEditUrl = (action, tabInfo) => {
     }
 }
 
-const getCMUrl = (sitesInfo, cdUrl) => {
+const getSiteInfo = (sitesInfo, cdUrl) => {
     for (var [cmUrl, sites] of Object.entries(sitesInfo)) {
         for (var [id, siteInfo] of Object.entries(sites)) {
             var siteUrl = Object.entries(siteInfo)[0][1];
             if (cdUrl.replace(/\/$/, "") === siteUrl.replace(/\/$/, ""))
-                return cmUrl;
+                return {
+                    cmUrl : cmUrl,
+                    siteName: siteInfo.siteName
+                };
         }
     }
 }
 
-const getAssociatedItemInfo = async (cmOrigin, path) => {
-    var previewUrl = getPreviewUrl(cmOrigin, path);
-    var notification;
+const getAssociatedItemInfo = async (cmOrigin, path, siteName) => {
+    var previewUrl = getPreviewUrl(cmOrigin, path, siteName);
     var timerId = setTimeout(function() { 
-        notification = new Notification("Redirecting, Please Wait...", {
-            icon: chrome.runtime.getURL("images/icon.png"),
-          }); 
+        alert("Redirecting, Please Wait..."); 
     }, 3000);
     var htmlDocument = await fetchHTML(previewUrl);
-    notification?.close();
     clearTimeout(timerId);
     if(htmlDocument){
         var itemInfo = {
@@ -195,12 +195,12 @@ const fetchHTML = async (url) => {
     }
 }
 
-const getPreviewUrl = (cmOrigin, path) => {
-    return cmOrigin + path + "?sc_mode=preview"
+const getPreviewUrl = (cmOrigin, path, siteName) => {
+    return `${cmOrigin}${path}?sc_mode=preview${siteName ? ("&sc_site=" + siteName) : ''}`;
 }
 
-const getEditUrl = (cmOrigin, path) => {
-    return cmOrigin + path + "?sc_mode=edit";
+const getEditUrl = (cmOrigin, path, siteName) => {
+    return `${cmOrigin}${path}?sc_mode=edit${siteName ? ("&sc_site=" + siteName) : ''}`;
 }
 
 const openInNewTab = (url) => {
