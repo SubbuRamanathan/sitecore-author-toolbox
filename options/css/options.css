@@ -165,7 +165,7 @@ label:hover {
 }
 .sitesSettings {
   padding: 0px 5px;
-  margin: 0px;
+  margin: 0px 5px;
   font-size: 10px;
   background: #f7991f !important;
   text-decoration: none;

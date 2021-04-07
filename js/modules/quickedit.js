@@ -1,4 +1,9 @@
-export { showContextMenu, contextMenuClickHandler, launchEditUrl };
+/*
+ * Quick Edit Module by Subramanian Ramanathan(Subbu)
+ * quickedit.js
+ */
+
+export { showContextMenu, contextMenuClickHandler, launchEditUrl }; 
 
 /**
  * Menu on right click
@@ -147,7 +152,15 @@ const getCMUrl = (sitesInfo, cdUrl) => {
 
 const getAssociatedItemInfo = async (cmOrigin, path) => {
     var previewUrl = getPreviewUrl(cmOrigin, path);
+    var notification;
+    var timerId = setTimeout(function() { 
+        notification = new Notification("Redirecting, Please Wait...", {
+            icon: chrome.runtime.getURL("images/icon.png"),
+          }); 
+    }, 3000);
     var htmlDocument = await fetchHTML(previewUrl);
+    notification?.close();
+    clearTimeout(timerId);
     if(htmlDocument){
         var itemInfo = {
             id: parseGuid(htmlDocument.getElementById("scItemID")?.value),
